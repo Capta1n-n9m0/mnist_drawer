@@ -6,10 +6,11 @@ from keras import layers
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
-
+# tf.debugging.set_log_device_placement(True)
 mnist = tf.keras.datasets.mnist
 (x_train, y_train), (x_test, y_test) = mnist.load_data()
 X = np.concatenate((x_train, x_test))
+X = X.astype('float32') / 255
 Y = np.concatenate((y_train, y_test))
 # Y to categorical
 Y = keras.utils.to_categorical(Y, 10)
@@ -83,7 +84,7 @@ class GUI:
     self.running = True
     self.screen.fill((0, 0, 0))
     self.step = 0
-    self.batch_size = 70
+    self.batch_size = 1400
     pygame.display.set_caption("Digits Learner")
     pygame.display.flip()
   
@@ -112,7 +113,7 @@ class GUI:
     pygame.display.flip()
   
   def learn(self):
-    print(self.step)
+    print(self.step, end=' ')
     start = self.step * self.batch_size
     stop = start + self.batch_size
     if(stop >= len(X)):
@@ -120,8 +121,9 @@ class GUI:
       self.step = 0
     else:
       self.step += 1
-    model.fit(Y[start:stop], X[start:stop], epochs=1, batch_size=self.batch_size, verbose=0)
-
+    with tf.device('/GPU:0'):
+      model.fit(Y[start:stop], X[start:stop], epochs=1, batch_size=self.batch_size)
+      
 
 def main():
   gui = GUI()
